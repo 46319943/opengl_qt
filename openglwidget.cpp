@@ -38,6 +38,7 @@ void OpenGLWidget::initializeGL()
     cameraPos = QVector3D(0,0,1);
     cameraTarget = QVector3D(0,0,0);
     QVector3D cameraDirection = (cameraPos - cameraTarget).normalized();
+    worldUp = QVector3D(0,1,0);
 }
 
 void OpenGLWidget::paintGL()
@@ -90,22 +91,24 @@ void OpenGLWidget::paintGL()
         front.setZ(sin(qDegreesToRadians(yaw)) * cos(qDegreesToRadians(pitch)));
         front.normalize();
         // Also re-calculate the Right and Up vector
-        QVector3D right =  QVector3D::crossProduct(front,
-                                                   QVector3D(0,1,0).normalized()
+        right =  QVector3D::crossProduct(front,
+                                                   worldUp.normalized()
                                                    ).normalized();
-        QVector3D up = QVector3D::crossProduct(right,front).normalized();
+        up = QVector3D::crossProduct(right,front).normalized();
         // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 
-        cameraPos = QVector3D(0,0,1);
+
         //    qDebug() << "cameraPos" << cameraPos;
         camera.setToIdentity();
         camera.lookAt(cameraPos,cameraPos + front , up);
 
         if(displayMode){
+            camera.setToIdentity();
             int time = QDateTime::currentMSecsSinceEpoch();
-            cameraPos = QVector3D(sin(time / 1000.f) * 5,0,cos(time / 1000.f) * 5);
+            cameraPos = QVector3D(sin(time / 1000.f) * 5, rotateHeight ,cos(time / 1000.f) * 5);
             camera.lookAt(cameraPos,cameraTarget,QVector3D(0.0f, 1.0f, 0.0f));
         }
+
     }
 
     else{
@@ -118,6 +121,7 @@ void OpenGLWidget::paintGL()
     m_program->setUniformValue(m_program->uniformLocation("move"),moveMatrix);
     m_program->setUniformValue(m_program->uniformLocation("perspective"),perspective);
     m_program->setUniformValue(m_program->uniformLocation("camera"),camera);
+    m_program->setUniformValue(m_program->uniformLocation("rotate"),rotateVec);
 
 
     // 3. 渲染图层
@@ -133,25 +137,49 @@ void OpenGLWidget::paintGL()
 
 void OpenGLWidget::mousePressEvent(QMouseEvent *event){
     pressVec4 = this->cursorToView(event);
-
+    lastVec4 = this->cursorToView(event);
     this->viewToWorld(pressVec4);
 }
 void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event){
-    QVector4D releaseVec4 = this->cursorToView(event);
+    if(event->button() == Qt::LeftButton){
+        QVector4D releaseVec4 = this->cursorToView(event);
+        QVector3D moveVec = (releaseVec4 - pressVec4).toVector3D();
 
-    QVector4D worldVec = this->viewToWorld(releaseVec4);
+        QMatrix4x4 temp;
+        temp.translate(moveVec);
+        moveMatrix = temp * moveMatrix;
 
-    QVector3D moveVec = (releaseVec4 - pressVec4).toVector3D();
-
-    QMatrix4x4 temp;
-    temp.translate(moveVec);
-    moveMatrix = temp * moveMatrix;
-
-    for(RenderLayer * layer : layers){
-        layer->selectFeature(worldVec.x(),worldVec.y());
+        if(releaseVec4 == pressVec4){
+            QVector4D worldVec = this->viewToWorld(releaseVec4);
+            for(RenderLayer * layer : layers){
+                layer->selectFeature(worldVec.x(),worldVec.y());
+            }
+        }
     }
 
+
     this->update();
+}
+
+void OpenGLWidget::mouseMoveEvent(QMouseEvent *event){
+    if(event->buttons() & Qt::RightButton){
+        qDebug() << "right button";
+
+        QVector4D releaseVec4 = this->cursorToView(event);
+        QVector3D moveVec = (releaseVec4 - lastVec4).toVector3D();
+        lastVec4 = releaseVec4;
+        pitch += moveVec.y() * 20;
+        yaw += moveVec.x() * 20;
+
+        if(pitch >= 89){
+            pitch = 89;
+        }
+        else if(pitch <= -89){
+            pitch = -89;
+        }
+
+        this->update();
+    }
 }
 
 void OpenGLWidget::wheelEvent(QWheelEvent *event){
@@ -189,30 +217,23 @@ void OpenGLWidget::wheelEvent(QWheelEvent *event){
 void OpenGLWidget::keyPressEvent(QKeyEvent *event){
     int key = event->key();
     if (key == Qt::Key_W){
-        //        cameraPos.setY(cameraPos.y() + 0.1f);
-        pitch += 1;
+        cameraPos += front * 0.1;
     }
     else if(key == Qt::Key_S){
-        //        cameraPos.setY(cameraPos.y() - 0.1f);
-        pitch -= 1;
+        cameraPos -= front * 0.1;
     }
     else if (key == Qt::Key_A){
-        //        cameraPos.setX(cameraPos.x() + 0.1f);
-        span += 1;
+        cameraPos -= right * 0.1;
     }
     else if(key == Qt::Key_D){
-        //        cameraPos.setX(cameraPos.x() - 0.1f);
-        span -= 1;
+        cameraPos += right * 0.1;
     }
     else if (key == Qt::Key_Q){
-        //        cameraPos.setZ(cameraPos.z() + 0.1f);
-        yaw -= 1;
+        cameraPos -= worldUp * 0.1;
     }
     else if(key == Qt::Key_E){
-        //        cameraPos.setZ(cameraPos.z() - 0.1f);
-        yaw += 1;
+        cameraPos += worldUp * 0.1;
     }
-
 
     this->update();
 }
@@ -235,4 +256,18 @@ QVector4D OpenGLWidget::viewToWorld(QVector4D point){
     QVector4D result = projection.inverted() * moveMatrix.inverted() * point;
     qDebug() << result;
     return result;
+}
+
+void OpenGLWidget::rotate(bool checked){
+    if(checked){
+        QMatrix4x4 temp;
+        temp.translate(0,-1,0);
+        temp.rotate(-90,1,0,0);
+        rotateVec = temp;
+        cameraTarget = QVector3D(0,-1,0);
+    }
+    else{
+        rotateVec.setToIdentity();
+        cameraTarget = QVector3D(0,0,0);
+    }
 }

@@ -47,3 +47,9 @@ void OpenGLWindow::on_checkBox_2_toggled(bool checked)
 {
     ui->openGLWidget->gameMode = checked;
 }
+
+void OpenGLWindow::on_checkBox_3_toggled(bool checked)
+{
+    ui->openGLWidget->rotate(checked);
+    ui->openGLWidget->rotateHeight = ui->lineEdit->text().toFloat();
+}

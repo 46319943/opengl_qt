@@ -32,13 +32,15 @@ public:
     void mouseReleaseEvent(QMouseEvent * event);
     void OpenGLWidget::wheelEvent(QWheelEvent *event);
     void OpenGLWidget::keyPressEvent(QKeyEvent *event);
+    void OpenGLWidget::mouseMoveEvent(QMouseEvent *event);
 
     QVector<RenderLayer *> layers;
 
     bool displayMode = false;
     bool gameMode = false;
 
-
+    void rotate(bool checked);
+    float rotateHeight = 0;
 
 private:
     QOpenGLBuffer m_vertex;
@@ -51,8 +53,10 @@ private:
     int * pointIndex = nullptr;
 
     QVector4D pressVec4;
+    QVector4D lastVec4;
 
     QMatrix4x4 projection;
+    QMatrix4x4 rotateVec;
 
     QMatrix4x4 camera;
     QVector3D cameraPos;
@@ -61,7 +65,10 @@ private:
     float pitch = .0f;
     float yaw = -90.0f;
     float span = 0;
+    QVector3D worldUp;
     QVector3D front;
+    QVector3D right;
+    QVector3D up;
 
     QMatrix4x4 perspective;
     QMatrix4x4 moveMatrix;
