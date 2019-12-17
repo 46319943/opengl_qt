@@ -31,12 +31,18 @@ void OpenGLWidget::initializeGL()
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
+
     // 使用线框模式，可以看看每个单独的三角形样子
-//    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+    cameraPos = QVector3D(0,0,1);
+    cameraTarget = QVector3D(0,0,0);
+    QVector3D cameraDirection = (cameraPos - cameraTarget).normalized();
 }
 
 void OpenGLWidget::paintGL()
 {
+    // 1. 清空上一次，以及一些初始化
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_program->bind();
@@ -47,14 +53,14 @@ void OpenGLWidget::paintGL()
     float widgetRatio = float(this->width()) / this->height();
     float boundaryRatio = boundary->width() / boundary->height();
 
-//    qDebug() << "widgetRatio" << widgetRatio << "boundaryRatio" << boundaryRatio;
+    //    qDebug() << "widgetRatio" << widgetRatio << "boundaryRatio" << boundaryRatio;
 
     if(boundaryRatio < widgetRatio){
         float width = boundary->height() * widgetRatio;
         float dx = width - boundary->width();
         adjustBoundary.adjust(-dx/2,0,dx/2,0);
-//        qDebug() << "boundary width" << boundary->width() << "boundary height" << boundary->height();
-//        qDebug() << "width" << width << "dx" << dx ;
+        //        qDebug() << "boundary width" << boundary->width() << "boundary height" << boundary->height();
+        //        qDebug() << "width" << width << "dx" << dx ;
     }
     else{
         float height = boundary->width() / widgetRatio;
@@ -62,32 +68,66 @@ void OpenGLWidget::paintGL()
         adjustBoundary.adjust(0,-dy/2,0,dy/2);
     }
 
+    // 2. 设置变换矩阵
+
     // 设置投影，将执行范围映射到标准坐标系
     projection.setToIdentity();
     // QRect的上下坐标反过来
     // 近、远端是指从原点往z负轴看。但这里为了保证z不变，设为1,-1，对xy没有影响，即乘1
     // 如果为-1,1，将z乘-1
     projection.ortho(adjustBoundary.left(),adjustBoundary.right(),adjustBoundary.top(),adjustBoundary.bottom(),1,-1);
-    qDebug() << "projection Matrix" << projection;
+    //    qDebug() << "projection Matrix" << projection;
 
-    // out = (x/w,y/w,z/w)
-    perspective.setToIdentity();
-    perspective.perspective(45.f,this->width() / this->height(),.1f,100.f);
-    qDebug() << "perspective Matrix" << perspective;
+    if(gameMode || displayMode){
+        // out = (x/w,y/w,z/w)
+        perspective.setToIdentity();
+        // 注意Qt中一般返回的是int，但是计算需要float！
+        perspective.perspective(45.f, 1 ,.1f,100.f);
+        //    qDebug() << "perspective Matrix" << perspective;
+
+        front.setX(cos(qDegreesToRadians(yaw)) * cos(qDegreesToRadians(pitch)));
+        front.setY(sin(qDegreesToRadians(pitch)));
+        front.setZ(sin(qDegreesToRadians(yaw)) * cos(qDegreesToRadians(pitch)));
+        front.normalize();
+        // Also re-calculate the Right and Up vector
+        QVector3D right =  QVector3D::crossProduct(front,
+                                                   QVector3D(0,1,0).normalized()
+                                                   ).normalized();
+        QVector3D up = QVector3D::crossProduct(right,front).normalized();
+        // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+
+        cameraPos = QVector3D(0,0,1);
+        //    qDebug() << "cameraPos" << cameraPos;
+        camera.setToIdentity();
+        camera.lookAt(cameraPos,cameraPos + front , up);
+
+        if(displayMode){
+            int time = QDateTime::currentMSecsSinceEpoch();
+            cameraPos = QVector3D(sin(time / 1000.f) * 5,0,cos(time / 1000.f) * 5);
+            camera.lookAt(cameraPos,cameraTarget,QVector3D(0.0f, 1.0f, 0.0f));
+        }
+    }
+
+    else{
+        perspective.setToIdentity();
+        camera.setToIdentity();
+    }
 
     // 设置变换矩阵
     m_program->setUniformValue(m_program->uniformLocation("projection"),projection);
     m_program->setUniformValue(m_program->uniformLocation("move"),moveMatrix);
     m_program->setUniformValue(m_program->uniformLocation("perspective"),perspective);
+    m_program->setUniformValue(m_program->uniformLocation("camera"),camera);
 
 
-    // 渲染图层
+    // 3. 渲染图层
     int i = 0;
     for(RenderLayer * layer : layers){
         layer->renderInit(m_program);
         layer->render();
     }
 
+    this->update();
 }
 
 
@@ -122,7 +162,7 @@ void OpenGLWidget::wheelEvent(QWheelEvent *event){
 
     QVector4D wheelVec4 = this->cursorToView(event);
 
-//    qDebug() << "wheel event" << wheelVec4 << event->angleDelta();
+    //    qDebug() << "wheel event" << wheelVec4 << event->angleDelta();
 
     QMatrix4x4 temp;
 
@@ -142,6 +182,37 @@ void OpenGLWidget::wheelEvent(QWheelEvent *event){
     temp.setToIdentity();
     temp.translate(wheelVec4.toVector3D());
     moveMatrix = temp * moveMatrix;
+
+    this->update();
+}
+
+void OpenGLWidget::keyPressEvent(QKeyEvent *event){
+    int key = event->key();
+    if (key == Qt::Key_W){
+        //        cameraPos.setY(cameraPos.y() + 0.1f);
+        pitch += 1;
+    }
+    else if(key == Qt::Key_S){
+        //        cameraPos.setY(cameraPos.y() - 0.1f);
+        pitch -= 1;
+    }
+    else if (key == Qt::Key_A){
+        //        cameraPos.setX(cameraPos.x() + 0.1f);
+        span += 1;
+    }
+    else if(key == Qt::Key_D){
+        //        cameraPos.setX(cameraPos.x() - 0.1f);
+        span -= 1;
+    }
+    else if (key == Qt::Key_Q){
+        //        cameraPos.setZ(cameraPos.z() + 0.1f);
+        yaw -= 1;
+    }
+    else if(key == Qt::Key_E){
+        //        cameraPos.setZ(cameraPos.z() - 0.1f);
+        yaw += 1;
+    }
+
 
     this->update();
 }

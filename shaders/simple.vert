@@ -6,6 +6,6 @@ uniform mat4 perspective;
 uniform mat4 move;
 void main()
 {
-   gl_Position = move * perspective * camera * projection * vec4(aPos.x, aPos.y, -50.0f, 1.0f);
+   gl_Position = move * perspective * camera * projection * vec4(aPos.x, aPos.y, .0f, 1.0f);
    gl_PointSize = 5;
 }

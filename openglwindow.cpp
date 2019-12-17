@@ -37,3 +37,13 @@ void OpenGLWindow::mousePressEvent(QMouseEvent *event){
     }
     ui->textEdit->setText(str);
 }
+
+void OpenGLWindow::on_checkBox_toggled(bool checked)
+{
+    ui->openGLWidget->displayMode = checked;
+}
+
+void OpenGLWindow::on_checkBox_2_toggled(bool checked)
+{
+    ui->openGLWidget->gameMode = checked;
+}

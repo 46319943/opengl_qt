@@ -5,6 +5,9 @@
 #include <QOpenGLFunctions>
 #include <QDebug>
 #include <QMouseEvent>
+#include <QTime>
+#include <QDateTime>
+#include <QtMath>
 
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
@@ -28,8 +31,12 @@ public:
     void mousePressEvent(QMouseEvent * event);
     void mouseReleaseEvent(QMouseEvent * event);
     void OpenGLWidget::wheelEvent(QWheelEvent *event);
+    void OpenGLWidget::keyPressEvent(QKeyEvent *event);
 
     QVector<RenderLayer *> layers;
+
+    bool displayMode = false;
+    bool gameMode = false;
 
 
 
@@ -50,6 +57,11 @@ private:
     QMatrix4x4 camera;
     QVector3D cameraPos;
     QVector3D cameraTarget;
+
+    float pitch = .0f;
+    float yaw = -90.0f;
+    float span = 0;
+    QVector3D front;
 
     QMatrix4x4 perspective;
     QMatrix4x4 moveMatrix;
