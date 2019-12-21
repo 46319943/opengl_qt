@@ -1,5 +1,14 @@
 ﻿#include "renderlayer.h"
+#include "openglwindow.h"
 #include "ui_openglwindow.h"
+
+RenderLayer::~RenderLayer(){
+    for(OGRFeature * feature : features){
+        delete feature;
+    }
+    delete[] gridArray;
+    delete layer;
+}
 
 RenderLayer::RenderLayer(OGRLayer * layer, int indexGrid):
     layer(layer),indexGrid(indexGrid),gridCount(indexGrid * indexGrid)
@@ -11,11 +20,18 @@ RenderLayer::RenderLayer(OGRLayer * layer, int indexGrid):
     envelopeArray = new OGREnvelope [indexGrid * indexGrid];
     // 获取图层MBR
     layer->GetExtent(&boundary);
+
+    // 将边界四边各延伸1/100，解决点落在网格边界的BUG
+    float boundaryWidth = boundary.MaxX - boundary.MinX;
+    float boundaryHeight = boundary.MaxY - boundary.MinY;
+    boundary.Merge(boundary.MinX - boundaryWidth / 100, boundary.MinY - boundaryHeight / 100);
+    boundary.Merge(boundary.MaxX + boundaryWidth / 100, boundary.MaxY + boundaryHeight / 100);
+
     boundaryQ.setCoords(boundary.MinX,boundary.MinY,boundary.MaxX,boundary.MaxY);
-    qDebug() << boundaryQ;
-    qDebug() << "Boundary Y:" << boundary.MinY << boundary.MaxY;
+    qDebug() << "boundaryQ" << boundaryQ;
     dx = (boundary.MaxX - boundary.MinX) / indexGrid;
-    dy = (boundary.MaxY - boundary.MinY) / indexGrid;
+    dy = (boundary.MaxY - boundary.MinY)/ indexGrid;
+
     // 创建网格对应的外接矩形，用来和要素判断相交情况
     for(int i = 0; i < indexGrid * indexGrid ; i++){
         float left = (i % 5) * dx + boundary.MinX;
@@ -26,9 +42,6 @@ RenderLayer::RenderLayer(OGRLayer * layer, int indexGrid):
         envelopeArray[i].Merge(right,bottom);
         qDebug() << left << right << bottom << top;
     }
-
-    // 如果是面的话，记录当前面点的数量
-    int polygonPointCount = 0;
 
     // 2.读取要素
 
@@ -45,46 +58,16 @@ RenderLayer::RenderLayer(OGRLayer * layer, int indexGrid):
                 gridArray[i].append(feature);
             }
         }
+        // 同时将所有的要素也存起来，避免再次通过layer创建新的对象
+        features.append(feature);
 
         // 2.获取要素的顶点
+        geoType = appendFeature(feature,vertexVector,vertexIndex);
 
-        // 判断要素类型
-//        qDebug() << feature->GetGeometryRef()->getGeometryName();
-        int featureType = feature->GetGeometryRef()->getGeometryType();
-        if(featureType == wkbPoint){
-            OGRPoint * point = (OGRPoint *)feature->GetGeometryRef();
-            vertexVector.append(point->getX());
-            vertexVector.append(point->getY());
-        }
-        else if(featureType == wkbPolygon){
-            geoType = 1;
-            OGRPolygon * polygon = (OGRPolygon *)feature->GetGeometryRef();
-            OGRLinearRing * ring = polygon->getExteriorRing();
-            vertexIndex.append(polygonPointCount);
-            vertexIndex.append(ring->getNumPoints());
-            polygonPointCount += ring->getNumPoints();
-            for(int i = 0; i < ring->getNumPoints(); i++){
-                vertexVector.append(ring->getX(i));
-                vertexVector.append(ring->getY(i));
-            }
-        }
-        else if(featureType == wkbMultiPolygon){
-            geoType = 1;
-            OGRMultiPolygon * mulPolygon = (OGRMultiPolygon *)feature->GetGeometryRef();
-            for(int i = 0; i < mulPolygon->getNumGeometries(); i++){
-                OGRPolygon * polygon = (OGRPolygon *)mulPolygon->getGeometryRef(i);
-                OGRLinearRing * ring = polygon->getExteriorRing();
-                vertexIndex.append(polygonPointCount);
-                vertexIndex.append(ring->getNumPoints());
-                polygonPointCount += ring->getNumPoints();
-                // 两层循环的循环变量注意命名！！！
-                for(int j = 0; j < ring->getNumPoints(); j++){
-                    vertexVector.append(ring->getX(j));
-                    vertexVector.append(ring->getY(j));
-                }
-            }
-        }
+    }
 
+    if(geoType == 0){
+        layerHeight = 0.1f;
     }
 
 }
@@ -106,7 +89,6 @@ RenderLayer::RenderLayer(const char * str, int indexGrid)
     new (this) RenderLayer(poDS->GetLayer(0),indexGrid);
 
     triangulate();
-
 }
 void RenderLayer::renderInit(QOpenGLShaderProgram *shader){
     // 如果已经进行初始化，直接返回
@@ -115,24 +97,24 @@ void RenderLayer::renderInit(QOpenGLShaderProgram *shader){
     }
     this->shader = shader;
 
-    vaoFirst.create();
-    vaoFirst.bind();
+    vaoOrigin.create();
+    vaoOrigin.bind();
 
-    vboFirst.create();
-    vboFirst.bind();
-    vboFirst.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    vboFirst.allocate(vertexVector.constData() , vertexVector.size() * sizeof(float));
+    vboOrigin.create();
+    vboOrigin.bind();
+    vboOrigin.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    vboOrigin.allocate(vertexVector.constData() , vertexVector.size() * sizeof(float));
     shader->enableAttributeArray(0);
     shader->setAttributeBuffer(0, GL_FLOAT, 0, 2, 2 * sizeof(float));
 
     if(geoType == 2){
-        vaoSecond.create();
-        vaoSecond.bind();
+        vaoTriangular.create();
+        vaoTriangular.bind();
 
-        vboSecond.create();
-        vboSecond.bind();
-        vboSecond.setUsagePattern(QOpenGLBuffer::StaticDraw);
-        vboSecond.allocate(triResult.constData() , triResult.size() * sizeof(float));
+        vboTriangular.create();
+        vboTriangular.bind();
+        vboTriangular.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        vboTriangular.allocate(triResult.constData() , triResult.size() * sizeof(float));
         shader->enableAttributeArray(0);
         shader->setAttributeBuffer(0, GL_FLOAT, 0, 2, 2 * sizeof(float));
     }
@@ -144,9 +126,17 @@ void RenderLayer::renderInit(QOpenGLShaderProgram *shader){
     vboSelect.create();
     vboSelect.bind();
     vboSelect.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-//    vboSelect.allocate(selectVertex.constData() , selectVertex.size() * sizeof(float));
     shader->enableAttributeArray(0);
     shader->setAttributeBuffer(0, GL_FLOAT, 0, 2, 2 * sizeof(float));
+
+    vaoDensity.create();
+    vaoDensity.bind();
+
+    vboDensity.create();
+    vboDensity.bind();
+    vboDensity.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    shader->enableAttributeArray(0);
+    shader->setAttributeBuffer(0, GL_FLOAT, 0, 3, 3 * sizeof(float));
 
 }
 
@@ -162,7 +152,7 @@ void RenderLayer::render(){
     if(geoType == 2){
 
         // 先画面，再画线，不然被覆盖
-        vaoSecond.bind();
+        vaoTriangular.bind();
         shader->setUniformValue(shader->uniformLocation("ourColor")
                                 ,.0f, .8f, .0f, 1.0f);
         for(int i = 0; i < triIndex.size() / 2; i++){
@@ -173,7 +163,7 @@ void RenderLayer::render(){
 
     // 2. 画点、线
 
-    vaoFirst.bind();
+    vaoOrigin.bind();
     shader->setUniformValue(shader->uniformLocation("ourColor")
                             ,.8f, .8f, .8f, 1.0f);
 
@@ -189,28 +179,36 @@ void RenderLayer::render(){
     }
 
     // 3. 画选择部分
+    // 在透视下启用景深后，被前面的覆盖看不到。当不画原始点时看得到。
 
-    if(selectVertex.size() == 0){
-        return;
-    }
+    if(selectVertex.size() != 0){
+        vaoSelect.bind();
+        // 需要绑定VBO才能重新分配内存！！！
+        vboSelect.bind();
+        vboSelect.allocate(selectVertex.constData() , selectVertex.size() * sizeof(float));
 
-    vaoSelect.bind();
-    // 需要绑定VBO才能重新分配内存！！！
-    vboSelect.bind();
-    vboSelect.allocate(selectVertex.constData() , selectVertex.size() * sizeof(float));
+        shader->setUniformValue(shader->uniformLocation("ourColor")
+                                ,.0f, .5f, .1f, 1.0f);
 
-    shader->setUniformValue(shader->uniformLocation("ourColor")
-                            ,.0f, .5f, .1f, 1.0f);
-
-    if(geoType == 0){
-        glFuncs->glDrawArrays(GL_POINTS,0,selectVertex.size() / 2);
-    }
-    else if(geoType == 1 || geoType == 2)
-    {
-        glFuncs->glLineWidth(lineWidth);
-        for(int i = 0; i < selectVertexIndex.size() / 2; i++){
-            glFuncs->glDrawArrays(GL_LINE_STRIP,selectVertexIndex.at(2 * i),selectVertexIndex.at(2 * i + 1));
+        if(geoType == 0){
+            glFuncs->glDrawArrays(GL_POINTS,0,selectVertex.size() / 2);
         }
+        else if(geoType == 1 || geoType == 2)
+        {
+            glFuncs->glLineWidth(lineWidth);
+            for(int i = 0; i < selectVertexIndex.size() / 2; i++){
+                glFuncs->glDrawArrays(GL_LINE_STRIP,selectVertexIndex.at(2 * i),selectVertexIndex.at(2 * i + 1));
+            }
+        }
+    }
+
+    // 4. 画点密度
+
+    if(densityVertex.size() != 0){
+        vaoDensity.bind();
+        vboDensity.bind();
+        vboDensity.allocate(densityVertex.constData(), densityVertex.size() * sizeof(float));
+        glFuncs->glDrawArrays(GL_POINTS,0,densityVertex.size()/3);
     }
 }
 
@@ -226,7 +224,6 @@ void RenderLayer::triangulate(){
         int vertexNum = vertexIndex.at(2 * i + 1);
 
         gpc_vertex * vertexArray = new gpc_vertex[vertexNum];
-        Vector2dVector a;
         for(
             int j = 0;
             j < vertexNum;
@@ -260,69 +257,231 @@ void RenderLayer::triangulate(){
     geoType = 2;
 
 }
+void RenderLayer::selectFeature(float x1, float y1){
+    selectFeature(x1,y1,x1,y1);
+}
 
-void RenderLayer::selectFeature(float x, float y){
+void RenderLayer::selectFeature(float x1, float y1, float x2, float y2){
     selectVertex.clear();
     selectVertexIndex.clear();
 
     OGREnvelope envelope;
-    envelope.Merge(x,y);
+    envelope.Merge(x1,y1);
+    envelope.Merge(x2,y2);
     qDebug() << "intersects?" << envelope.Intersects(boundary);
     if(envelope.Intersects(boundary)){
-        int xLoc = (x - boundary.MinX) / dx ;
-        int yLoc = (y - boundary.MinY) / dy ;
+        int xLoc = ((x1+x2)/2 - boundary.MinX) / dx ;
+        int yLoc = ((y1+y2)/2 - boundary.MinY) / dy ;
         int loc = xLoc + yLoc * indexGrid;
         qDebug() << "select location" << loc;
         QVector<OGRFeature*> grid = gridArray[loc];
 
-        int polygonPointCount = 0;
         QString qstr;
+        for(int i = 0; i < layer->GetLayerDefn()->GetFieldCount(); i++){
+            const char * str = layer->GetLayerDefn()->GetFieldDefn(i)->GetNameRef();
+            qstr += QString().fromLocal8Bit(str);
+            qstr += " ";
+        }
+        qstr += "\n";
+
+        OGREnvelope featureEnvelope;
         for(OGRFeature * feature : grid){
-            // 如果field不存在，可能报ERROR 1:index -1 错误。Debug模式错误消失
-            int fieldIndex = feature->GetFieldIndex("NAME");
-            if(fieldIndex != -1){
-                const char * str = feature->GetFieldAsString(fieldIndex);
-                qstr += QString().fromLocal8Bit(str);
+            // 判断是否和鼠标范围相交
+            feature->GetGeometryRef()->getEnvelope(&featureEnvelope);
+            if(concreteSelect && !envelope.Intersects(featureEnvelope)){
+                continue;
             }
 
-            int featureType = feature->GetGeometryRef()->getGeometryType();
-            if(featureType == wkbPoint){
-                OGRPoint * point = (OGRPoint *)feature->GetGeometryRef();
-                selectVertex.append(point->getX());
-                selectVertex.append(point->getY());
+            // 如果field不存在，可能报ERROR 1:index -1 错误。Debug模式错误消失
+            //            int fieldIndex = feature->GetFieldIndex("NAME");
+            for(int i = 0; i < feature->GetFieldCount(); i++){
+                feature->GetFieldDefnRef(0)->GetNameRef();
+                const char * str = feature->GetFieldAsString(i);
+                qstr += QString().fromLocal8Bit(str);
+                qstr += " ";
             }
-            else if(featureType == wkbPolygon){
-                OGRPolygon * polygon = (OGRPolygon *)feature->GetGeometryRef();
-                OGRLinearRing * ring = polygon->getExteriorRing();
-                selectVertexIndex.append(polygonPointCount);
-                selectVertexIndex.append(ring->getNumPoints());
-                polygonPointCount += ring->getNumPoints();
-                for(int i = 0; i < ring->getNumPoints(); i++){
-                    selectVertex.append(ring->getX(i));
-                    selectVertex.append(ring->getY(i));
-                }
-            }
-            else if(featureType == wkbMultiPolygon){
-                OGRMultiPolygon * mulPolygon = (OGRMultiPolygon *)feature->GetGeometryRef();
-                for(int i = 0; i < mulPolygon->getNumGeometries(); i++){
-                    OGRPolygon * polygon = (OGRPolygon *)mulPolygon->getGeometryRef(i);
-                    OGRLinearRing * ring = polygon->getExteriorRing();
-                    selectVertexIndex.append(polygonPointCount);
-                    selectVertexIndex.append(ring->getNumPoints());
-                    polygonPointCount += ring->getNumPoints();
-                    // 两层循环的循环变量注意命名！！！
-                    for(int j = 0; j < ring->getNumPoints(); j++){
-                        selectVertex.append(ring->getX(j));
-                        selectVertex.append(ring->getY(j));
-                    }
-                }
-            }
+            qstr += "\n";
+
+            appendFeature(feature, selectVertex, selectVertexIndex);
         }
 
-        //        this->window->textEdit->setText(QString(qstr));
         queryString = qstr;
+        this->window->displaySelection();
     }
 
+}
+
+void RenderLayer::calculateDensity(float radius, float resolution){
+    if(geoType != 0){
+        return;
+    }
+    densityVertex.clear();
+    QVector<float> densityData;
+    //    OGRSpatialReference  wgs84;
+    //    wgs84.SetWellKnownGeogCS("WGS84");
+    // 首先获取边界距离，进行拓展
+
+    // 最短边像素数量
+    float minPiexl = resolution;
+    // 每个像素距离
+    float disPiexl;
+    if(boundaryQ.width() > boundaryQ.height()){
+        disPiexl = (boundaryQ.height() + 2*radius ) / minPiexl;
+    }
+    else{
+        disPiexl = (boundaryQ.width() + 2*radius ) / minPiexl;
+    }
+    // 对应方向像素数量。注意这里应该是int！
+    // 10 < 10 和 10 < 10.1 ，真假不同
+    int widthPiexl = (boundaryQ.width() + 2*radius ) / disPiexl;
+    int heightPiexl = (boundaryQ.height() + 2*radius ) / disPiexl;
+
+    // 注意进行初始化！
+    float maxDensity = 0;
+    // 计算每一点的估计值
+    for(int i = 0; i < heightPiexl; i++){
+        for(int j = 0; j < widthPiexl; j++){
+            float pointX = boundary.MinX - radius + disPiexl * j;
+            float pointY = boundary.MinY - radius + disPiexl * i;
+            float density = 0;
+            OGRPoint pointR(pointX,pointY);
+            //            pointR.assignSpatialReference(&wgs84);
+            for(int k = 0; k < features.size(); k++){
+                OGRPoint * pointF = (OGRPoint*)features.at(k)->GetGeometryRef();
+                //                pointF->assignSpatialReference(&wgs84);
+                //                float distance = pointR.Distance(pointF);
+                float distance = sqrt(
+                            pow((pointR.getX() - pointF->getX()),2)
+                            + pow((pointR.getY() - pointF->getY()),2)
+                            );
+                if(distance > radius){
+                    continue;
+                }
+                density += (3 / M_PI) * pow(1 - pow((distance / radius),2) ,2);
+            }
+            density = density / (radius * radius) ;
+
+            // 保存最大值
+            if(density > maxDensity){
+                maxDensity = density;
+            }
+            // 画点时不画值为0的点
+            if(density != 0){
+                densityVertex.append(pointX);
+                densityVertex.append(pointY);
+                densityVertex.append(density);
+            }
+            // 画图数据
+            densityData.append(density);
+
+        }
+        qDebug() << "density:" << i << densityVertex.size();
+    }
+
+    qDebug() << maxDensity;
+
+    // 计算从下到上，图片从上到下，需要反转
+    QVector<float> reverse;
+    for(int i = 0; i < heightPiexl; i++){
+        for(int j = 0; j < widthPiexl; j++){
+            reverse.append(densityData.at(
+                               (heightPiexl-i-1) * widthPiexl + j
+                               ));
+        }
+    }
+    // 导出tiff
+    exportDensity(boundary.MinX - radius,
+                  boundary.MaxY + radius,
+                  disPiexl,disPiexl,
+                  widthPiexl,heightPiexl,
+                  reverse);
+
+    // 变到0-1
+    for(int i = 0; i < densityVertex.size() / 3; i++){
+        densityVertex[i*3 + 2] = densityVertex.at(i*3 + 2) / maxDensity;
+    }
+}
+
+void RenderLayer::exportDensity(float x,float y,float dx,float dy,int xCount,int yCount,QVector<float> data){
+    // 定义地理信息
+    double adfGeoTransform[6] = { x, dx, 0, y, 0, -dy };
+    // 定义投影信息
+    char *pszSRS_WKT = NULL;
+    this->layer->GetSpatialRef()->exportToWkt(&pszSRS_WKT);
+    // 获取Driver
+    const char *pszFormat = "GTiff";
+    GDALDriver *poDriver;
+//    char **papszMetadata;
+    poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
+    if( poDriver == NULL ){
+        exit( 1 );
+    }
+    // 创建文件
+    GDALDataset *poDstDS;
+    char **papszOptions = NULL;
+    poDstDS = poDriver->Create("output.tiff",xCount+100,yCount,1,GDT_Float32,papszOptions);
+    // 设置元数据
+    poDstDS->SetGeoTransform( adfGeoTransform );
+    poDstDS->SetProjection(pszSRS_WKT);
+    // 写入数据
+    GDALRasterBand * band = poDstDS->GetBands()[0];
+    band->RasterIO( GF_Write, 0, 0, xCount, yCount,
+                    (void *)data.constData(), xCount, yCount, GDT_Float32, 0, 0 );
+    // 关闭文件
+    GDALClose( (GDALDatasetH) poDstDS );
+}
+
+int RenderLayer::appendFeature(OGRFeature * feature, QVector<float> & vertexVector, QVector<int> & vertexIndex){
+    int featureType = feature->GetGeometryRef()->getGeometryType();
+    if(featureType == wkbPoint){
+        OGRPoint * point = (OGRPoint *)feature->GetGeometryRef();
+        vertexVector.append(point->getX());
+        vertexVector.append(point->getY());
+        return 0;
+    }
+    else if(featureType == wkbPolygon){
+        OGRPolygon * polygon = (OGRPolygon *)feature->GetGeometryRef();
+        OGRLinearRing * ring = polygon->getExteriorRing();
+
+        if(vertexIndex.size() == 0){
+            vertexIndex.append(0);
+        }
+        else{
+            int pointCount = vertexIndex.at(vertexIndex.size()-2) + vertexIndex.at(vertexIndex.size()-1);
+            vertexIndex.append(pointCount);
+        }
+        vertexIndex.append(ring->getNumPoints());
+
+        for(int i = 0; i < ring->getNumPoints(); i++){
+            vertexVector.append(ring->getX(i));
+            vertexVector.append(ring->getY(i));
+        }
+
+        return 1;
+    }
+    else if(featureType == wkbMultiPolygon){
+        OGRMultiPolygon * mulPolygon = (OGRMultiPolygon *)feature->GetGeometryRef();
+        for(int i = 0; i < mulPolygon->getNumGeometries(); i++){
+            OGRPolygon * polygon = (OGRPolygon *)mulPolygon->getGeometryRef(i);
+            OGRLinearRing * ring = polygon->getExteriorRing();
+
+            if(vertexIndex.size() == 0){
+                vertexIndex.append(0);
+            }
+            else{
+                int pointCount = vertexIndex.at(vertexIndex.size()-2) + vertexIndex.at(vertexIndex.size()-1);
+                vertexIndex.append(pointCount);
+            }
+            vertexIndex.append(ring->getNumPoints());
+
+            // 两层循环的循环变量注意命名！！！
+            for(int j = 0; j < ring->getNumPoints(); j++){
+                vertexVector.append(ring->getX(j));
+                vertexVector.append(ring->getY(j));
+            }
+        }
+        return 1;
+    }
 }
 
 float RenderLayer::randF(){
@@ -331,4 +490,5 @@ float RenderLayer::randF(){
 
 // 注意：static 成员变量的内存既不是在声明类时分配，也不是在创建对象时分配，而是在（类外）初始化时分配。
 // 反过来说，没有在类外初始化的 static 成员变量不能使用。
-Ui_OpenGLWindow * RenderLayer::window = nullptr;
+Ui_OpenGLWindow * RenderLayer::windowUi = nullptr;
+OpenGLWindow * RenderLayer::window = nullptr;

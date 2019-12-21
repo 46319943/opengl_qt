@@ -35,8 +35,11 @@ public:
     void OpenGLWidget::mouseMoveEvent(QMouseEvent *event);
 
     QVector<RenderLayer *> layers;
+    QRectF * boundary;
 
     bool displayMode = false;
+    float displaySpeed = 1;
+
     bool gameMode = false;
 
     void rotate(bool checked);
@@ -46,11 +49,6 @@ private:
     QOpenGLBuffer m_vertex;
     QOpenGLVertexArrayObject m_object;
     QOpenGLShaderProgram *m_program;
-
-    const float * vertexArray;
-    QRectF * boundary;
-    int arraySize;
-    int * pointIndex = nullptr;
 
     QVector4D pressVec4;
     QVector4D lastVec4;
@@ -74,6 +72,7 @@ private:
     QMatrix4x4 moveMatrix;
 
     QVector4D cursorToView(QMouseEvent * event);
+    void cursorToViewBoundary(QMouseEvent * event, QVector4D * leftTop, QVector4D * rightBottom, float offset = 2);
     QVector4D cursorToView(QWheelEvent * event);
 
     QVector4D viewToWorld(QVector4D point);

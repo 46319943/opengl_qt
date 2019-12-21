@@ -21,13 +21,13 @@ void OpenGLWidget::initializeGL()
     m_program->bind();
 
     // 创建渲染图层
-    RenderLayer * renderLayer = new RenderLayer("D:/Document/Qt/shp/china.shp");
+    RenderLayer * renderLayer = new RenderLayer("D:/Document/Qt/ConsoleDemo/school.shp");
     layers.append(renderLayer);
-    layers.append(new RenderLayer("D:/Document/Qt/ConsoleDemo/school.shp"));
+//    layers.append(new RenderLayer("D:/Document/Qt/ConsoleDemo/school.shp"));
 
     // 设置投影区域
     boundary = &(renderLayer->boundaryQ);
-    qDebug() << "boundary:" << *boundary;
+//    qDebug() << "boundary:" << *boundary;
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 
@@ -37,14 +37,16 @@ void OpenGLWidget::initializeGL()
 
     cameraPos = QVector3D(0,0,1);
     cameraTarget = QVector3D(0,0,0);
-    QVector3D cameraDirection = (cameraPos - cameraTarget).normalized();
     worldUp = QVector3D(0,1,0);
 }
 
 void OpenGLWidget::paintGL()
 {
+    if(layers.size() == 0){
+        return;
+    }
     // 1. 清空上一次，以及一些初始化
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_program->bind();
     m_program->setUniformValue(m_program->uniformLocation("ourColor"),0.0f, 1.0f, 0.0f, 1.0f);
@@ -80,11 +82,13 @@ void OpenGLWidget::paintGL()
     //    qDebug() << "projection Matrix" << projection;
 
     if(gameMode || displayMode){
+        glEnable(GL_DEPTH_TEST);
+
         // out = (x/w,y/w,z/w)
         perspective.setToIdentity();
         // 注意Qt中一般返回的是int，但是计算需要float！
         perspective.perspective(45.f, 1 ,.1f,100.f);
-        //    qDebug() << "perspective Matrix" << perspective;
+//            qDebug() << "perspective Matrix" << perspective;
 
         front.setX(cos(qDegreesToRadians(yaw)) * cos(qDegreesToRadians(pitch)));
         front.setY(sin(qDegreesToRadians(pitch)));
@@ -105,13 +109,14 @@ void OpenGLWidget::paintGL()
         if(displayMode){
             camera.setToIdentity();
             int time = QDateTime::currentMSecsSinceEpoch();
-            cameraPos = QVector3D(sin(time / 1000.f) * 5, rotateHeight ,cos(time / 1000.f) * 5);
+            cameraPos = QVector3D(sin(time * displaySpeed / 1000.f) * 3, rotateHeight ,cos(time * displaySpeed / 1000.f) * 3);
             camera.lookAt(cameraPos,cameraTarget,QVector3D(0.0f, 1.0f, 0.0f));
         }
 
     }
 
     else{
+        glDisable(GL_DEPTH_TEST);
         perspective.setToIdentity();
         camera.setToIdentity();
     }
@@ -127,6 +132,7 @@ void OpenGLWidget::paintGL()
     // 3. 渲染图层
     int i = 0;
     for(RenderLayer * layer : layers){
+        m_program->setUniformValue(m_program->uniformLocation("layerHeight"),layer->layerHeight);
         layer->renderInit(m_program);
         layer->render();
     }
@@ -150,9 +156,15 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event){
         moveMatrix = temp * moveMatrix;
 
         if(releaseVec4 == pressVec4){
+            QVector4D leftTop,rightBottom;
+            cursorToViewBoundary(event,&leftTop,&rightBottom);
+            leftTop = this->viewToWorld(leftTop);
+            rightBottom = this->viewToWorld(rightBottom);
             QVector4D worldVec = this->viewToWorld(releaseVec4);
             for(RenderLayer * layer : layers){
-                layer->selectFeature(worldVec.x(),worldVec.y());
+//                layer->selectFeature(worldVec.x(),worldVec.y());
+                layer->selectFeature(leftTop.x(),leftTop.y(),rightBottom.x(),rightBottom.y());
+
             }
         }
     }
@@ -163,7 +175,6 @@ void OpenGLWidget::mouseReleaseEvent(QMouseEvent *event){
 
 void OpenGLWidget::mouseMoveEvent(QMouseEvent *event){
     if(event->buttons() & Qt::RightButton){
-        qDebug() << "right button";
 
         QVector4D releaseVec4 = this->cursorToView(event);
         QVector3D moveVec = (releaseVec4 - lastVec4).toVector3D();
@@ -244,6 +255,20 @@ QVector4D OpenGLWidget::cursorToView(QMouseEvent * event){
     y = - y;
     return QVector4D(x,y,0,1);
 }
+void OpenGLWidget::cursorToViewBoundary(QMouseEvent * event,
+                                        QVector4D * leftTop, QVector4D * rightBottom,
+                                        float offset){
+    float x1 = float(event->x() - offset) / this->width() * 2 - 1;
+    float y1 = float(event->y() - offset) / this->height() * 2 - 1;
+    y1 = - y1;
+
+    float x2 = float(event->x() + offset) / this->width() * 2 - 1;
+    float y2 = float(event->y() + offset) / this->height() * 2 - 1;
+    y2 = - y2;
+
+    *leftTop = QVector4D(x1,y1,0,1);
+    *rightBottom = QVector4D(x2,y2,0,1);
+}
 
 QVector4D OpenGLWidget::cursorToView(QWheelEvent * event){
     float x = float(event->x()) / this->width() * 2 - 1;
@@ -262,7 +287,7 @@ void OpenGLWidget::rotate(bool checked){
     if(checked){
         QMatrix4x4 temp;
         temp.translate(0,-1,0);
-        temp.rotate(-90,1,0,0);
+        temp.rotate(90,1,0,0);
         rotateVec = temp;
         cameraTarget = QVector3D(0,-1,0);
     }

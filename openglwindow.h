@@ -2,6 +2,8 @@
 #define OPENGLWINDOW_H
 
 #include <QMainWindow>
+#include <QDir>
+#include <QFileDialog>
 
 namespace Ui {
 class OpenGLWindow;
@@ -15,7 +17,7 @@ public:
     explicit OpenGLWindow(QWidget *parent = 0);
     ~OpenGLWindow();
 
-    void OpenGLWindow::mousePressEvent(QMouseEvent *event);
+    void OpenGLWindow::displaySelection();
 
 private slots:
     void on_pushButton_clicked();
@@ -25,6 +27,14 @@ private slots:
     void on_checkBox_2_toggled(bool checked);
 
     void on_checkBox_3_toggled(bool checked);
+
+    void on_pushButton_2_clicked();
+
+    void on_pushButton_3_clicked();
+
+    void on_pushButton_4_clicked();
+
+    void on_checkBox_4_toggled(bool checked);
 
 private:
     Ui::OpenGLWindow *ui;

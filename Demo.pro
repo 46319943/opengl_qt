@@ -30,8 +30,6 @@ SOURCES += \
     openglwidget.cpp \
     matrixutils.cpp \
     renderlayer.cpp \
-    triangulate.cpp \
-    polypartition.cpp \
     gpc.cpp \
     main.cpp
 
@@ -42,8 +40,6 @@ HEADERS += \
     openglwidget.h \
     matrixutils.h \
     renderlayer.h \
-    triangulate.h \
-    polypartition.h \
     gpc.h \
     gpc.h
 
