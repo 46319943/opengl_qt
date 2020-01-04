@@ -28,20 +28,22 @@ SOURCES += \
         mainwindow.cpp \
     openglwindow.cpp \
     openglwidget.cpp \
-    matrixutils.cpp \
     renderlayer.cpp \
     gpc.cpp \
-    main.cpp
+    main.cpp \
+    rtreeindex.cpp \
+    utils.cpp
 
 HEADERS += \
         mainwindow.h \
     ../build-Demo-Desktop_Qt_5_9_0_MSVC2015_32bit-Debug/ui_mainwindow.h \
     openglwindow.h \
     openglwidget.h \
-    matrixutils.h \
     renderlayer.h \
     gpc.h \
-    gpc.h
+    gpc.h \
+    rtreeindex.h \
+    utils.h
 
 FORMS += \
         mainwindow.ui \

@@ -17,6 +17,7 @@
 #include <QtMath>
 
 #include "gpc.h"
+#include "rtreeindex.h"
 
 // 头文件的互相引用，声明位置导致的问题。需要前置声明，并在CPP文件中包含定义。
 // 在ui_openglwindow.h头文件中，Ui_OpenGLWindow出现在了类定义之前，所以要先声明
@@ -67,6 +68,9 @@ public:
     QOpenGLBuffer vboDensity;
     QOpenGLVertexArrayObject vaoDensity;
 
+    QOpenGLBuffer vboRTree;
+    QOpenGLVertexArrayObject vaoRTree;
+
     QOpenGLShaderProgram * shader = nullptr;
 
     void renderInit(QOpenGLShaderProgram * shader);
@@ -100,6 +104,10 @@ private:
     QVector<int> selectVertexIndex;
 
     QVector<float> densityVertex;
+
+    QVector<float> RTreeVertex;
+
+    RTreeIndex rindex;
 
     // 取随机数
     float randF();

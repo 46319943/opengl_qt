@@ -78,6 +78,17 @@ void OpenGLWidget::paintGL()
     // QRect的上下坐标反过来
     // 近、远端是指从原点往z负轴看。但这里为了保证z不变，设为1,-1，对xy没有影响，即乘1
     // 如果为-1,1，将z乘-1
+    /*
+    By convention, OpenGL is a right-handed system.
+    Note that in normalized device coordinates OpenGL actually uses a left-handed system (the projection matrix switches the handedness).
+
+    example for ortho and perspective projection:
+    // note that we're translating the scene in the reverse direction of where we want to move
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
+    glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)width/(float)height, 0.1f, 100.0f);
+    */
     projection.ortho(adjustBoundary.left(),adjustBoundary.right(),adjustBoundary.top(),adjustBoundary.bottom(),1,-1);
     //    qDebug() << "projection Matrix" << projection;
 

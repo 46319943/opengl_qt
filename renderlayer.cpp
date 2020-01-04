@@ -50,6 +50,8 @@ RenderLayer::RenderLayer(OGRLayer * layer, int indexGrid):
     OGREnvelope envelope;
     while( (feature = layer->GetNextFeature()) != NULL ){
 
+        rindex.Insert(feature);
+
         // 1.将要素根据外接矩形存入索引网格数组
 
         feature->GetGeometryRef()->getEnvelope(&envelope);
@@ -69,6 +71,8 @@ RenderLayer::RenderLayer(OGRLayer * layer, int indexGrid):
     if(geoType == 0){
         layerHeight = 0.1f;
     }
+
+    RTreeVertex = rindex.Skeleton();
 
 }
 
@@ -137,6 +141,16 @@ void RenderLayer::renderInit(QOpenGLShaderProgram *shader){
     vboDensity.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     shader->enableAttributeArray(0);
     shader->setAttributeBuffer(0, GL_FLOAT, 0, 3, 3 * sizeof(float));
+
+    vaoRTree.create();
+    vaoRTree.bind();
+
+    vboRTree.create();
+    vboRTree.bind();
+    vboRTree.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    vboRTree.allocate(RTreeVertex.constData(), RTreeVertex.size() * sizeof(float));
+    shader->enableAttributeArray(0);
+    shader->setAttributeBuffer(0, GL_FLOAT, 0, 2, 2 * sizeof(float));
 
 }
 
@@ -210,6 +224,14 @@ void RenderLayer::render(){
         vboDensity.allocate(densityVertex.constData(), densityVertex.size() * sizeof(float));
         glFuncs->glDrawArrays(GL_POINTS,0,densityVertex.size()/3);
     }
+
+    // 5.RTree
+    for(int i = 0; i < RTreeVertex.count() / 2 / 4; i++){
+        vaoRTree.bind();
+        vaoRTree.bind();
+        glFuncs->glDrawArrays(GL_LINE_LOOP, i*4, 4);
+    }
+
 }
 
 void RenderLayer::triangulate(){
@@ -307,6 +329,31 @@ void RenderLayer::selectFeature(float x1, float y1, float x2, float y2){
 
         queryString = qstr;
         this->window->displaySelection();
+
+        // R树测试
+        QVector<OGRFeature*> rresult;
+        QVector<RTreeNode*> nodes;
+        rindex.root->Search(envelope,rresult,nodes);
+
+        RTreeVertex.clear();
+        for(RTreeNode * node : nodes){
+//            OGREnvelope * nodeEnvelope = &(node->envelope);
+
+            RTreeVertex.append(node->envelope.MinX);
+            RTreeVertex.append(node->envelope.MinY);
+
+            RTreeVertex.append(node->envelope.MinX);
+            RTreeVertex.append(node->envelope.MaxY);
+
+            RTreeVertex.append(node->envelope.MaxX);
+            RTreeVertex.append(node->envelope.MaxY);
+
+            RTreeVertex.append(node->envelope.MaxX);
+            RTreeVertex.append(node->envelope.MinY);
+        }
+        vboRTree.bind();
+        vboRTree.allocate(RTreeVertex.constData(),sizeof(float) * RTreeVertex.size());
+
     }
 
 }
