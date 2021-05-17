@@ -30,9 +30,9 @@ public:
     void paintGL() override;
     void mousePressEvent(QMouseEvent * event);
     void mouseReleaseEvent(QMouseEvent * event);
-    void OpenGLWidget::wheelEvent(QWheelEvent *event);
-    void OpenGLWidget::keyPressEvent(QKeyEvent *event);
-    void OpenGLWidget::mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *event);
+    void keyPressEvent(QKeyEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
 
     QVector<RenderLayer *> layers;
     QRectF * boundary;

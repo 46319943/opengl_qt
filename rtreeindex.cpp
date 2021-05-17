@@ -1,4 +1,5 @@
-﻿#include "rtreeindex.h"
+﻿#include <cfloat>
+#include "rtreeindex.h"
 
 RTreeIndex::RTreeIndex()
 {
@@ -59,13 +60,13 @@ QVector<OGREnvelope> RTreeLeafNode::SubEnvelope()
 
 void RTreeBranchNode::Search(const OGREnvelope & searchArea,
                         QVector<OGRFeature*> & result,
-                        QVector<RTreeNode*> & node = QVector<RTreeNode*>()
+                        QVector<RTreeNode*> & node
                         ){
     // 判断搜索区域是否与节点区域重合
     if(!envelope.Intersects(searchArea)){
         return;
     }
-
+    node = QVector<RTreeNode*>();
     // 如果重合，调用子节点搜索
     for(RTreeNode * child : childs){
         child->Search(searchArea, result, node);

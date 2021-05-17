@@ -55,7 +55,7 @@ void MainWindow::on_pushButton_clicked()
     std::map<int,char> int_sort_map;
     char value;
     int index;
-    QDebug & debug = qDebug();
+    QDebug debug = qDebug();
     // 最后一个数据单元会被读两遍：读一遍之后，才检测到结尾
     while(!feof(file)){
         fread(&value,sizeof(value),1,file);

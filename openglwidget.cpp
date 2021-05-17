@@ -15,8 +15,8 @@ void OpenGLWidget::initializeGL()
 
     // 创建Shader
     m_program = new QOpenGLShaderProgram();
-    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/simple.vert");
-    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/simple.frag");
+    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "../shaders/simple.vert");
+    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, "../shaders/simple.frag");
     m_program->link();
     m_program->bind();
 

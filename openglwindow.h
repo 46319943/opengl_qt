@@ -17,7 +17,7 @@ public:
     explicit OpenGLWindow(QWidget *parent = 0);
     ~OpenGLWindow();
 
-    void OpenGLWindow::displaySelection();
+    void displaySelection();
 
 private slots:
     void on_pushButton_clicked();
