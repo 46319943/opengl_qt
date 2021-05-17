@@ -21,7 +21,7 @@ void OpenGLWidget::initializeGL()
     m_program->bind();
 
     // 创建渲染图层
-    RenderLayer * renderLayer = new RenderLayer("D:/Document/Qt/ConsoleDemo/school.shp");
+    RenderLayer * renderLayer = new RenderLayer("../tests/data/qu.shp");
     layers.append(renderLayer);
 //    layers.append(new RenderLayer("D:/Document/Qt/ConsoleDemo/school.shp"));
 
