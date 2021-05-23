@@ -12,16 +12,16 @@ out float vertHeight;
 
 void main()
 {
-   if(aPos.z != 0){
-       gl_Position = move * perspective * camera * rotate* projection * vec4(aPos.x, aPos.y, -aPos.z, 1.0f);
-   }
-   else if(layerHeight != 0){
-       gl_Position = move * perspective * camera * rotate* projection * vec4(aPos.x, aPos.y, -layerHeight, 1.0f);
-   }
-   else{
-	   gl_Position = move * perspective * camera * rotate* projection * vec4(aPos.x, aPos.y, aPos.z, 1.0f);
-   }
-   
-   gl_PointSize = 4.5;
-   vertHeight = aPos.z;
+    if (aPos.z != 0){
+        gl_Position = move * perspective * camera * rotate* projection * vec4(aPos.x, aPos.y, -aPos.z, 1.0f);
+    }
+    else if (layerHeight != 0){
+        gl_Position = move * perspective * camera * rotate* projection * vec4(aPos.x, aPos.y, -layerHeight, 1.0f);
+    }
+    else {
+        gl_Position = move * perspective * camera * rotate* projection * vec4(aPos.x, aPos.y, aPos.z, 1.0f);
+    }
+
+    gl_PointSize = 4.5;
+    vertHeight = aPos.z;
 }
