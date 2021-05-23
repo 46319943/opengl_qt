@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xml:lang="zh">
+    <Esri>
+        <CreaDate>20130507</CreaDate>
+        <CreaTime>20420400</CreaTime>
+        <ArcGISFormat>1.0</ArcGISFormat>
+        <SyncOnce>FALSE</SyncOnce>
+        <DataProperties>
+            <lineage>
+                <Process
+                        ToolSource="D:\Program Files\ArcGIS10\Desktop10.0\ArcToolbox\Toolboxes\Conversion Tools.tbx\FeatureclassToCoverage"
+                        Date="20111219" Time="172921">FeatureclassToCoverage "G:\地址编码\gdb0_jd\jd_sz_polygon.shp POLYGON"
+                    G:\地址编码\gdb0_jd\jd_sz_polygo3 # DOUBLE
+                </Process>
+                <Process
+                        ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Data Management Tools.tbx\CopyFeatures"
+                        Date="20111229" Time="102142">CopyFeatures F:\深圳地址编码\2011年网格第一次更新\gdb0_jd\jd_sz_polygo3\polygon
+                    "K:\2011网格更新\2011年第一次网格更新2011.12.27\2011年第一次网格更新2011.12.27\New Folder\jd_sz_polygo3_polygon.shp" # 0
+                    0 0
+                </Process>
+                <Process ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Analysis Tools.tbx\Union"
+                         Date="20120923" Time="170157">Union "F:\网格更新\网格第三次更新\2011年第二次网格更新提交版\南山区\nsq\jd_nsq.shp
+                    #;F:\网格更新\网格第三次更新\2011年第二次网格更新提交版\南山区\nsq\New_Shapefile.shp #"
+                    F:\网格更新\网格第三次更新\2011年第二次网格更新提交版\南山区\nsq\jd_nsq_Union.shp ALL # GAPS
+                </Process>
+                <Process
+                        ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Data Management Tools.tbx\Append"
+                        Date="20121023" Time="203011">Append 'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\南山区\nsq\jd_nsq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\宝安区\baq\jd_baq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\盐田区\ytq\jd_ytq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\福田区\ftq\jd_ftq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\罗湖区\lhq\jd_lhq.shp';'E:\grid updatev2.0\第三\第三次网格更新提交版\龙岗区\lgq\jd_lgq.shp'
+                    "E:\grid updatev2.0\第三\第三次网格更新提交版\深圳市\jd_sz.shp" TEST # #
+                </Process>
+                <Process
+                        ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Data Management Tools.tbx\Append"
+                        Date="20121023" Time="220043">Append 'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\南山区\nsq\jd_nsq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\宝安区\baq\jd_baq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\盐田区\ytq\jd_ytq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\福田区\ftq\jd_ftq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\罗湖区\lhq\jd_lhq.shp';'E:\grid updatev2.0\第三\第三次网格更新提交版\龙岗区\lgq\jd_lgq.shp'
+                    "E:\grid updatev2.0\第三\第三次网格更新提交版\深圳市\sz\jd_sz.shp" TEST # #
+                </Process>
+                <Process
+                        ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Data Management Tools.tbx\Append"
+                        Date="20121024" Time="114644">Append 'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\南山区\nsq\jd_nsq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\宝安区\baq\jd_baq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\盐田区\ytq\jd_ytq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\福田区\ftq\jd_ftq.shp';'E:\grid
+                    updatev2.0\第三\第三次网格更新提交版\罗湖区\lhq\jd_lhq.shp';'E:\grid updatev2.0\第三\第三次网格更新提交版\龙岗区\lgq\jd_lgq.shp'
+                    "E:\grid updatev2.0\第三\第三次网格更新提交版\深圳市\sz\jd_0.shp" TEST # #
+                </Process>
+                <Process ToolSource="C:\Program Files\ArcGIS\Desktop10.0\ArcToolbox\Toolboxes\Analysis Tools.tbx\Union"
+                         Date="20121221" Time="155220">Union "'E:\grid updatev2.0\第三\网格第三次提交版v6.0\深圳市\sz\jd_sz.shp'
+                    #;'E:\grid updatev2.0\第三\网格第三次提交版v6.0\深圳市\sz\sq_xa.shp' #" "E:\grid
+                    updatev2.0\第三\网格第三次提交版v6.0\深圳市\sz\jd_sz_Union.shp" ALL # GAPS
+                </Process>
+            </lineage>
+            <itemProps>
+                <itemName Sync="TRUE">jd_sz_Union</itemName>
+                <imsContentType Sync="TRUE">002</imsContentType>
+                <itemSize Sync="TRUE">0.000</itemSize>
+                <itemLocation>
+                    <linkage Sync="TRUE">file://\\WHU-NIEKE\E$\grid updatev2.0\第三\网格第三次提交版v6.0\深圳市\sz\jd_sz_Union.shp
+                    </linkage>
+                    <protocol Sync="TRUE">Local Area Network</protocol>
+                </itemLocation>
+            </itemProps>
+            <copyHistory>
+                <copy source="E:\grid updatev2.0\第三\第三次网格更新提交版\jd_0"
+                      dest="\\WHU-NIEKE\E$\grid updatev2.0\第三\第三次网格更新提交版\深圳市\sz\jd_0" date="20121024"
+                      time="11455800"></copy>
+            </copyHistory>
+        </DataProperties>
+        <SyncDate>20121221</SyncDate>
+        <SyncTime>15521900</SyncTime>
+        <ModDate>20121221</ModDate>
+        <ModTime>15521900</ModTime>
+    </Esri>
+    <dataIdInfo>
+        <envirDesc Sync="TRUE">Microsoft Windows Server 2008 R2 Version 6.1 (Build 7601) Service Pack 1; ESRI ArcGIS
+            10.0.0.2414
+        </envirDesc>
+        <dataLang>
+            <languageCode value="zho" country="CHN"></languageCode>
+        </dataLang>
+        <idCitation>
+            <resTitle Sync="TRUE">jd_sz_Union</resTitle>
+            <presForm>
+                <PresFormCd value="005"></PresFormCd>
+            </presForm>
+        </idCitation>
+        <descKeys>
+            <thesaName uuidref="723f6998-058e-11dc-8314-0800200c9a66"></thesaName>
+            <keyword Sync="TRUE">002</keyword>
+        </descKeys>
+        <spatRpType>
+            <SpatRepTypCd value="001"></SpatRepTypCd>
+        </spatRpType>
+    </dataIdInfo>
+    <mdLang>
+        <languageCode value="zho"></languageCode>
+    </mdLang>
+    <mdChar>
+        <CharSetCd value="004"></CharSetCd>
+    </mdChar>
+    <distInfo>
+        <distFormat>
+            <formatName Sync="TRUE">Shapefile</formatName>
+        </distFormat>
+        <distTranOps>
+            <transSize Sync="TRUE">0.000</transSize>
+        </distTranOps>
+    </distInfo>
+    <mdHrLv>
+        <ScopeCd value="005"></ScopeCd>
+    </mdHrLv>
+    <mdHrLvName Sync="TRUE">dataset</mdHrLvName>
+    <spdoinfo>
+        <ptvctinf>
+            <esriterm Name="jd_sz_Union">
+                <efeatyp Sync="TRUE">Simple</efeatyp>
+                <efeageom Sync="TRUE">4</efeageom>
+                <esritopo Sync="TRUE">FALSE</esritopo>
+                <efeacnt Sync="TRUE">0</efeacnt>
+                <spindex Sync="TRUE">FALSE</spindex>
+                <linrefer Sync="TRUE">FALSE</linrefer>
+            </esriterm>
+        </ptvctinf>
+    </spdoinfo>
+    <spatRepInfo>
+        <VectSpatRep>
+            <topLvl>
+                <TopoLevCd value="001"></TopoLevCd>
+            </topLvl>
+            <geometObjs>
+                <geoObjTyp>
+                    <GeoObjTypCd value="002"></GeoObjTypCd>
+                    <geoObjCnt Sync="TRUE">0</geoObjCnt>
+                </geoObjTyp>
+            </geometObjs>
+        </VectSpatRep>
+    </spatRepInfo>
+    <eainfo>
+        <detailed Name="jd_sz_Union">
+            <enttyp>
+                <enttypl Sync="TRUE">jd_sz_Union</enttypl>
+                <enttypt Sync="TRUE">Feature Class</enttypt>
+                <enttypc Sync="TRUE">0</enttypc>
+            </enttyp>
+            <attr>
+                <attrlabl Sync="TRUE">FID</attrlabl>
+                <attalias Sync="TRUE">FID</attalias>
+                <attrtype Sync="TRUE">OID</attrtype>
+                <attwidth Sync="TRUE">4</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+                <attrdef Sync="TRUE">Internal feature number.</attrdef>
+                <attrdefs Sync="TRUE">ESRI</attrdefs>
+                <attrdomv>
+                    <udom Sync="TRUE">Sequential unique whole numbers that are automatically generated.</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">Shape</attrlabl>
+                <attalias Sync="TRUE">Shape</attalias>
+                <attrtype Sync="TRUE">Geometry</attrtype>
+                <attwidth Sync="TRUE">0</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+                <attrdef Sync="TRUE">Feature geometry.</attrdef>
+                <attrdefs Sync="TRUE">ESRI</attrdefs>
+                <attrdomv>
+                    <udom Sync="TRUE">Coordinates defining the features.</udom>
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">FID_jd_sz</attrlabl>
+                <attalias Sync="TRUE">FID_jd_sz</attalias>
+                <attrtype Sync="TRUE">Integer</attrtype>
+                <attwidth Sync="TRUE">9</attwidth>
+                <atprecis Sync="TRUE">9</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">AREA</attrlabl>
+                <attalias Sync="TRUE">AREA</attalias>
+                <attrtype Sync="TRUE">Double</attrtype>
+                <attwidth Sync="TRUE">19</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">PERIMETER</attrlabl>
+                <attalias Sync="TRUE">PERIMETER</attalias>
+                <attrtype Sync="TRUE">Double</attrtype>
+                <attwidth Sync="TRUE">19</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">JDNAME</attrlabl>
+                <attalias Sync="TRUE">JDNAME</attalias>
+                <attrtype Sync="TRUE">String</attrtype>
+                <attwidth Sync="TRUE">254</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">JDCODE</attrlabl>
+                <attalias Sync="TRUE">JDCODE</attalias>
+                <attrtype Sync="TRUE">String</attrtype>
+                <attwidth Sync="TRUE">15</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">FID_sq_xa</attrlabl>
+                <attalias Sync="TRUE">FID_sq_xa</attalias>
+                <attrtype Sync="TRUE">Integer</attrtype>
+                <attwidth Sync="TRUE">9</attwidth>
+                <atprecis Sync="TRUE">9</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">AREA_1</attrlabl>
+                <attalias Sync="TRUE">AREA_1</attalias>
+                <attrtype Sync="TRUE">Double</attrtype>
+                <attwidth Sync="TRUE">19</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">PERIMETE_1</attrlabl>
+                <attalias Sync="TRUE">PERIMETE_1</attalias>
+                <attrtype Sync="TRUE">Double</attrtype>
+                <attwidth Sync="TRUE">19</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">SQNAME</attrlabl>
+                <attalias Sync="TRUE">SQNAME</attalias>
+                <attrtype Sync="TRUE">String</attrtype>
+                <attwidth Sync="TRUE">254</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+            <attr>
+                <attrlabl Sync="TRUE">SQCODE</attrlabl>
+                <attalias Sync="TRUE">SQCODE</attalias>
+                <attrtype Sync="TRUE">String</attrtype>
+                <attwidth Sync="TRUE">12</attwidth>
+                <atprecis Sync="TRUE">0</atprecis>
+                <attscale Sync="TRUE">0</attscale>
+            </attr>
+        </detailed>
+    </eainfo>
+    <mdDateSt Sync="TRUE">20121221</mdDateSt>
+</metadata>

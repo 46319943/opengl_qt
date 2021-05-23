@@ -1,84 +1,87 @@
 ﻿#ifndef OPENGLWIDGET_H
 #define OPENGLWIDGET_H
 
-#include <QOpenGLWidget>
-#include <QOpenGLFunctions>
-#include <QDebug>
-#include <QMouseEvent>
-#include <QTime>
 #include <QDateTime>
-#include <QtMath>
-
-#include <QOpenGLShaderProgram>
-#include <QOpenGLBuffer>
-#include <QOpenGLVertexArrayObject>
+#include <QDebug>
 #include <QMatrix4x4>
-
+#include <QMouseEvent>
+#include <QOpenGLBuffer>
+#include <QOpenGLFunctions>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
+#include <QOpenGLWidget>
+#include <QTime>
+#include <QtMath>
 
 // 引入GDAL头文件
 #include "ogrsf_frmts.h"
 #include "renderlayer.h"
 
-class OpenGLWidget : public QOpenGLWidget,
-        protected QOpenGLFunctions
-{
-    Q_OBJECT
-public:
-    explicit OpenGLWidget(QWidget * parent);
+class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
+  Q_OBJECT
+ public:
+  explicit OpenGLWidget(QWidget *parent);
 
-    void initializeGL() override;
-    void paintGL() override;
-    void mousePressEvent(QMouseEvent * event);
-    void mouseReleaseEvent(QMouseEvent * event);
-    void OpenGLWidget::wheelEvent(QWheelEvent *event);
-    void OpenGLWidget::keyPressEvent(QKeyEvent *event);
-    void OpenGLWidget::mouseMoveEvent(QMouseEvent *event);
+  void initializeGL() override;
 
-    QVector<RenderLayer *> layers;
-    QRectF * boundary;
+  void paintGL() override;
 
-    bool displayMode = false;
-    float displaySpeed = 1;
+  void mousePressEvent(QMouseEvent *event);
 
-    bool gameMode = false;
+  void mouseReleaseEvent(QMouseEvent *event);
 
-    void rotate(bool checked);
-    float rotateHeight = 0;
+  void wheelEvent(QWheelEvent *event);
 
-private:
-    QOpenGLBuffer m_vertex;
-    QOpenGLVertexArrayObject m_object;
-    QOpenGLShaderProgram *m_program;
+  void keyPressEvent(QKeyEvent *event);
 
-    QVector4D pressVec4;
-    QVector4D lastVec4;
+  void mouseMoveEvent(QMouseEvent *event);
 
-    QMatrix4x4 projection;
-    QMatrix4x4 rotateVec;
+  QVector<RenderLayer *> layers;
+  QRectF *boundary;
 
-    QMatrix4x4 camera;
-    QVector3D cameraPos;
-    QVector3D cameraTarget;
+  bool displayMode = false;
+  float displaySpeed = 1;
 
-    float pitch = .0f;
-    float yaw = -90.0f;
-    float span = 0;
-    QVector3D worldUp;
-    QVector3D front;
-    QVector3D right;
-    QVector3D up;
+  bool gameMode = false;
 
-    QMatrix4x4 perspective;
-    QMatrix4x4 moveMatrix;
+  void rotate(bool checked);
 
-    QVector4D cursorToView(QMouseEvent * event);
-    void cursorToViewBoundary(QMouseEvent * event, QVector4D * leftTop, QVector4D * rightBottom, float offset = 2);
-    QVector4D cursorToView(QWheelEvent * event);
+  float rotateHeight = 0;
 
-    QVector4D viewToWorld(QVector4D point);
+ private:
+  QOpenGLBuffer m_vertex;
+  QOpenGLVertexArrayObject m_object;
+  QOpenGLShaderProgram *m_program;
 
+  QVector4D pressVec4;
+  QVector4D lastVec4;
 
+  QMatrix4x4 projection;
+  QMatrix4x4 rotateVec;
+
+  QMatrix4x4 camera;
+  QVector3D cameraPos;
+  QVector3D cameraTarget;
+
+  float pitch = .0f;
+  float yaw = -90.0f;
+  float span = 0;
+  QVector3D worldUp;
+  QVector3D front;
+  QVector3D right;
+  QVector3D up;
+
+  QMatrix4x4 perspective;
+  QMatrix4x4 moveMatrix;
+
+  QVector4D cursorToView(QMouseEvent *event);
+
+  void cursorToViewBoundary(QMouseEvent *event, QVector4D *leftTop,
+                            QVector4D *rightBottom, float offset = 2);
+
+  QVector4D cursorToView(QWheelEvent *event);
+
+  QVector4D viewToWorld(QVector4D point);
 };
 
-
-#endif // OPENGLWIDGET_H
+#endif  // OPENGLWIDGET_H
