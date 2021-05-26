@@ -1,5 +1,7 @@
 ﻿#include "renderlayer.h"
 
+#include <QRandomGenerator>
+
 #include "openglwindow.h"
 #include "ui_openglwindow.h"
 
@@ -470,12 +472,12 @@ int RenderLayer::appendFeature(OGRFeature *feature,
                                QVector<int> &vertexIndex) {
   int featureType = feature->GetGeometryRef()->getGeometryType();
   if (featureType == wkbPoint) {
-    OGRPoint *point = (OGRPoint *)feature->GetGeometryRef();
+    OGRPoint *point = feature->GetGeometryRef()->toPoint();
     vertexVector.append(point->getX());
     vertexVector.append(point->getY());
     return 0;
   } else if (featureType == wkbPolygon) {
-    OGRPolygon *polygon = (OGRPolygon *)feature->GetGeometryRef();
+    OGRPolygon *polygon = feature->GetGeometryRef()->toPolygon();
     OGRLinearRing *ring = polygon->getExteriorRing();
 
     if (vertexIndex.size() == 0) {
@@ -494,9 +496,9 @@ int RenderLayer::appendFeature(OGRFeature *feature,
 
     return 1;
   } else if (featureType == wkbMultiPolygon) {
-    OGRMultiPolygon *mulPolygon = (OGRMultiPolygon *)feature->GetGeometryRef();
+    OGRMultiPolygon *mulPolygon = feature->GetGeometryRef()->toMultiPolygon();
     for (int i = 0; i < mulPolygon->getNumGeometries(); i++) {
-      OGRPolygon *polygon = (OGRPolygon *)mulPolygon->getGeometryRef(i);
+      OGRPolygon *polygon = mulPolygon->getGeometryRef(i)->toPolygon();
       OGRLinearRing *ring = polygon->getExteriorRing();
 
       if (vertexIndex.size() == 0) {
@@ -518,7 +520,14 @@ int RenderLayer::appendFeature(OGRFeature *feature,
   }
 }
 
-float RenderLayer::randF() { return qrand() % 100 / 100.f; }
+float RenderLayer::randF() {
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
+  qsrand(QTime(0,0,0).secsTo(QTime::currentTime()));
+  return qrand() % 100 / 100.f;
+#else
+  return QRandomGenerator::global()->generateDouble();
+#endif
+}
 
 // 注意：static
 // 成员变量的内存既不是在声明类时分配，也不是在创建对象时分配，而是在（类外）初始化时分配。
