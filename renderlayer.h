@@ -121,7 +121,7 @@ class RenderLayer {
   RTreeIndex rindex;
 
   // 取随机数
-  float randF();
+  static float randF();
 
   float dx;
   float dy;
